@@ -1,6 +1,7 @@
 //! Configuring the shape of generated Wasm modules.
 
 use arbitrary::{Arbitrary, Result, Unstructured};
+use crate::EntityType;
 
 /// Configuration for a generated module.
 ///
@@ -16,6 +17,16 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 /// need to override the methods for things you want to change away from the
 /// default.
 pub trait Config: for<'a> Arbitrary<'a> + Default + Clone {
+    /// Return the available set of impots
+    /// By default, returns 'None' which means that any arbitrary import can
+    /// be generated... to only allow imports from a specific set, override
+    /// this to return a vec of '(module name, field name, entity type)'
+    /// describing each available import.
+    fn available_imports(&self) -> Option<Vec<(String, Option<String>, EntityType)>> {
+        None
+    }
+
+
     /// The minimum number of types to generate. Defaults to 0.
     fn min_types(&self) -> usize {
         0
