@@ -966,18 +966,22 @@ where
         &mut self,
         min: usize,
         u: &mut Unstructured,
-        available_imports: Option<Vec<(String, Option<String>, EntityType)>>
+        available_imports: Vec<(String, Option<String>, EntityType)>
     ) -> Result<()> {
         if self.config.max_type_size() < self.type_size {
             return Ok(());
         }
+
         let mut choices: Vec<
-            fn(&mut Unstructured, &mut ConfiguredModule<C>) -> Result<EntityType>,
+            fn(&mut Unstructured, &mut ConfiguredModule<C>)
+        -> Result<EntityType>,
         > = Vec::with_capacity(4);
         
         let mut imports = Vec::new();
         arbitrary_loop(u, min, self.config.max_imports() - self.num_imports, |u| {
             choices.clear();
+            match...
+            
             if self.can_add_local_or_import_func() {
                 choices.push(|u, m| {
                     let idx = *u.choose(&m.func_types)?;
@@ -1094,14 +1098,6 @@ where
     }
 
     fn arbitrary_imports(&mut self, min: usize, u: &mut Unstructured) -> Result<()> {
-        let available_imports_result = self.config.available_imports();
-        match available_imports_result {
-            Some(result) => arbitrary_imports_from_available_imports(
-                min, u, result
-            ),
-            None => (),
-        }
-        
         if self.config.max_type_size() < self.type_size {
             return Ok(());
         }
@@ -1109,6 +1105,15 @@ where
         let mut choices: Vec<
             fn(&mut Unstructured, &mut ConfiguredModule<C>) -> Result<EntityType>,
         > = Vec::with_capacity(4);
+
+        // new, along with func defined above
+        let available_imports_result = self.config.available_imports();
+        match available_imports_result {
+            Some(result) => self.arbitrary_imports_from_available_imports(
+                min, u, result
+            )?,
+            None => (),
+        }
 
         let mut imports = Vec::new();
         arbitrary_loop(u, min, self.config.max_imports() - self.num_imports, |u| {
