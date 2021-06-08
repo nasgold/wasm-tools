@@ -62,6 +62,8 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::str;
+use rand::thread_rng;
+use rand::seq::SliceRandom;
 
 pub use config::{Config, DefaultConfig, SwarmConfig};
 
@@ -980,46 +982,37 @@ where
         let mut imports = Vec::new();
         arbitrary_loop(u, min, self.config.max_imports() - self.num_imports, |u| {
             choices.clear();
-            match...
-            
-            if self.can_add_local_or_import_func() {
-                choices.push(|u, m| {
-                    let idx = *u.choose(&m.func_types)?;
-                    let ty = m.func_type(idx).clone();
-                    Ok(EntityType::Func(idx, ty))
-                });
-            }
-            if self.can_add_local_or_import_module() {
-                choices.push(|u, m| {
-                    let idx = *u.choose(&m.module_types)?;
-                    let ty = m.module_type(idx).clone();
-                    Ok(EntityType::Module(idx, ty.clone()))
-                });
-            }
-            if self.can_add_local_or_import_instance() {
-                choices.push(|u, m| {
-                    let idx = *u.choose(&m.instance_types)?;
-                    let ty = m.instance_type(idx).clone();
-                    Ok(EntityType::Instance(idx, ty))
-                });
-            }
-            if self.can_add_local_or_import_global() {
-                choices.push(|u, m| {
-                    let ty = m.arbitrary_global_type(u)?;
-                    Ok(EntityType::Global(ty))
-                });
-            }
-            if self.can_add_local_or_import_memory() {
-                choices.push(|u, m| {
-                    let ty = m.arbitrary_memtype(u)?;
-                    Ok(EntityType::Memory(ty))
-                });
-            }
-            if self.can_add_local_or_import_table() {
-                choices.push(|u, m| {
-                    let ty = m.arbitrary_table_type(u)?;
-                    Ok(EntityType::Table(ty))
-                });
+
+            // choose new arbitrary import from available imports vec
+            let cur_import = &available_imports.choose(&mut thread_rng());
+            let (import_name, field_name, entity_type) = cur_import;
+            match entity_type {
+                EntityType::Func(idx, ty) => {
+                    // do stuff
+                },
+                EntityType::Module(idx, ty) => {
+                    // do stuff
+                },
+                EntityType::Instance(idx, ty) => {
+                    // do stuff
+                },
+                EntityType::Global(ty) => {
+                    // do stuff
+                },
+                EntityType::Memory(ty) => {
+                    if self.can_add_local_or_import_memory() {
+                        choices.push(|u, m| {
+                            Ok((import_name, EntityType::Memory(ty)))
+                        });
+                    }
+                },
+                EntityType::Table(ty) => {
+                    if self.can_add_local_or_import_table() {
+                        choices.push(|u, m| {
+                            Ok((import_name, EntityType::Table(ty)))
+                        });
+                    }
+                },
             }
 
             if choices.is_empty() {
