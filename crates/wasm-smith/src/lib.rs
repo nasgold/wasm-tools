@@ -974,10 +974,7 @@ where
             return Ok(());
         }
 
-        let mut choices: Vec<
-            fn(&mut Unstructured, &mut ConfiguredModule<C>)
-        -> Result<EntityType>,
-        > = Vec::with_capacity(4);
+        let mut choices: Vec<Result<(String, EntityType)>> = Vec::with_capacity(4);
         
         let mut imports = Vec::new();
         arbitrary_loop(u, min, self.config.max_imports() - self.num_imports, |u| {
@@ -985,10 +982,14 @@ where
 
             // choose new arbitrary import from available imports vec
             let cur_import = &available_imports.choose(&mut thread_rng());
-            let (import_name, field_name, entity_type) = cur_import;
+            let (import_name, field_name, entity_type) = cur_import.unwrap();
             match entity_type {
                 EntityType::Func(idx, ty) => {
-                    // do stuff
+                    if self.can_add_local_or_import_func() {
+                        choices.push(
+                            Ok((import_name.to_string(), EntityType::Func(*idx, *ty)))
+                        );
+                    }
                 },
                 EntityType::Module(idx, ty) => {
                     // do stuff
@@ -1000,18 +1001,10 @@ where
                     // do stuff
                 },
                 EntityType::Memory(ty) => {
-                    if self.can_add_local_or_import_memory() {
-                        choices.push(|u, m| {
-                            Ok((import_name, EntityType::Memory(ty)))
-                        });
-                    }
+                    // do stuff
                 },
                 EntityType::Table(ty) => {
-                    if self.can_add_local_or_import_table() {
-                        choices.push(|u, m| {
-                            Ok((import_name, EntityType::Table(ty)))
-                        });
-                    }
+                    // do stuff
                 },
             }
 
